@@ -29,3 +29,9 @@ class NewUser(UserBase):
     class Config:
         orm_mode = True
         from_attributes = True
+
+
+class AuthResponse(BaseModel):
+    success: bool
+    data: NewUser | None
+    error: None | dict
