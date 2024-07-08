@@ -51,8 +51,9 @@ class SentimentModel:
         pred_class = np.argmax(probs)
         pred_label = self.label_encoder.inverse_transform([pred_class])[0]
         pred_percentage = probs[pred_class]
+        rounded_pred_percentage = round(pred_percentage * 100, 2)
 
-        return pred_label, pred_percentage
+        return pred_label, rounded_pred_percentage
 
 
 sentiment_model = SentimentModel()
