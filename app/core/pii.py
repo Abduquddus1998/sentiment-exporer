@@ -3,13 +3,15 @@ from torch.nn.functional import softmax
 from transformers import BertForTokenClassification
 from transformers import BertTokenizer
 
+from app.core.config import settings
+
 
 class PIIModel:
     def __init__(self):
         self.model = BertForTokenClassification.from_pretrained(
-            '/Users/abdukuddus/University of Greenwich/MSc Project/sentiment-analysis-app/pii-prototype/saved_model')
+            settings.PII_MODEL_PATH)
         self.tokenizer = BertTokenizer.from_pretrained(
-            '/Users/abdukuddus/University of Greenwich/MSc Project/sentiment-analysis-app/pii-prototype/saved_model')
+            settings.PII_MODEL_PATH)
 
         self.tags_map = {'B-EMAIL': 0, 'B-NAME_STUDENT': 1, 'B-PHONE_NUM': 2, 'B-STREET_ADDRESS': 3,
                          'B-URL_PERSONAL': 4,
@@ -37,11 +39,25 @@ class PIIModel:
         predicted_labels = [self.reverse_tags_map[pred.item()] for pred in predictions[0]]
         predicted_probs = [prob[pred].item() for prob, pred in zip(probabilities[0], predictions[0])]
 
-        pii_list = [
-            {"token": token, "label": label, "prob": round(prob * 100, 2)}
-            for token, label, prob in zip(tokens, predicted_labels, predicted_probs)
-            if token not in ['[CLS]', '[SEP]']
-        ]
+        pii_list = []
+        current_word = ""
+        current_label = None
+        current_prob = None
+
+        for token, label, prob in zip(tokens, predicted_labels, predicted_probs):
+            if token in ['[CLS]', '[SEP]']:
+                continue
+            if token.startswith("##"):
+                current_word += token[2:]
+            else:
+                if current_word:
+                    pii_list.append(
+                        {"token": current_word, "label": current_label, "prob": round(current_prob * 100, 2)})
+                current_word = token
+                current_label = label
+                current_prob = prob
+        if current_word:
+            pii_list.append({"token": current_word, "label": current_label, "prob": round(current_prob * 100, 2)})
 
         return pii_list
 

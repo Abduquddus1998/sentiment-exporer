@@ -4,13 +4,15 @@ from cleantext import clean
 from sklearn.preprocessing import LabelEncoder
 from transformers import BertTokenizer, BertForSequenceClassification
 
+from app.core.config import settings
+
 
 class SentimentModel:
     def __init__(self):
         self.model = BertForSequenceClassification.from_pretrained(
-            '/Users/abdukuddus/University of Greenwich/MSc Project/sentiment-analysis-app/sentiment-prototype/saved_model')
+            settings.SENTIMENT_MODEL_PATH)
         self.tokenizer = BertTokenizer.from_pretrained(
-            '/Users/abdukuddus/University of Greenwich/MSc Project/sentiment-analysis-app/sentiment-prototype/saved_model')
+            settings.SENTIMENT_TOKENIZER_PATH)
         self.label_encoder = LabelEncoder()
         self.device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
         self.model.to(self.device)

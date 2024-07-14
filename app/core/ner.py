@@ -3,13 +3,15 @@ from torch.nn.functional import softmax
 from transformers import BertForTokenClassification
 from transformers import BertTokenizer
 
+from app.core.config import settings
+
 
 class NerModel:
     def __init__(self):
         self.model = BertForTokenClassification.from_pretrained(
-            '/Users/abdukuddus/University of Greenwich/MSc Project/sentiment-analysis-app/ner-prototype/saved_model')
+            settings.NER_MODEL_PATH)
         self.tokenizer = BertTokenizer.from_pretrained(
-            '/Users/abdukuddus/University of Greenwich/MSc Project/sentiment-analysis-app/ner-prototype/saved_model')
+            settings.NER_TOKENIZER_PATH)
 
         self.tags_map = {'O': 0, 'I-ORG': 1, 'I-PER': 2, 'B-GPE': 3, 'I-GPE': 4, 'B-PER': 5, 'I-ART': 6, 'I-TIM': 7,
                          'B-GEO': 8,
@@ -39,11 +41,25 @@ class NerModel:
         predicted_labels = [self.reverse_tags_map[pred.item()] for pred in predictions[0]]
         predicted_probs = [prob[pred].item() for prob, pred in zip(probabilities[0], predictions[0])]
 
-        ner_list = [
-            {"token": token, "label": label, "prob": round(prob * 100, 2)}
-            for token, label, prob in zip(tokens, predicted_labels, predicted_probs)
-            if token not in ['[CLS]', '[SEP]']
-        ]
+        ner_list = []
+        current_word = ""
+        current_label = None
+        current_prob = None
+
+        for token, label, prob in zip(tokens, predicted_labels, predicted_probs):
+            if token in ['[CLS]', '[SEP]']:
+                continue
+            if token.startswith("##"):
+                current_word += token[2:]
+            else:
+                if current_word:
+                    ner_list.append(
+                        {"token": current_word, "label": current_label, "prob": round(current_prob * 100, 2)})
+                current_word = token
+                current_label = label
+                current_prob = prob
+        if current_word:
+            ner_list.append({"token": current_word, "label": current_label, "prob": round(current_prob * 100, 2)})
 
         return ner_list
 
