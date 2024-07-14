@@ -1,9 +1,10 @@
-import secrets
 from datetime import datetime, timedelta
 
 from jose import jwt
 
-SECRET_KEY = secrets.token_urlsafe(32)
+from app.core.config import settings
+
+SECRET_KEY = settings.TOKEN_KEY
 ALGORITHM = "HS256"
 ACCESS_TOKEN_EXPIRE_MINUTES = 60 * 24 * 7
 

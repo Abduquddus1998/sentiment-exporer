@@ -13,6 +13,7 @@ class Settings(BaseSettings):
     PII_TOKENIZER_PATH: str
     POS_MODEL_PATH: str
     POS_TOKENIZER_PATH: str
+    TOKEN_KEY: str
 
     class Config:
         case_sensitive = True
